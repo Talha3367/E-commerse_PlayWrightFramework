@@ -7,10 +7,6 @@ Application Under Test
 OS : Windows
 IDE : VS Code, IntelliJ
 
-# Clone (OR) Download this repo: #
-> 1. Clone the repository
-git clone https://StewartTitle@dev.azure.com/StewartTitle/TBS%20Automation%20Testing/_git/PlaywrightTestRepo
-
 
 # Install dependencies #
 > 1. npm i
