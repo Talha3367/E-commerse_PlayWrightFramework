@@ -1,0 +1,100 @@
+name: Playwright Tests
+
+on:
+  push:
+    branches:
+      - develop
+  schedule:
+    - cron: '0 0 * * 1,4'  # Monday & Thursday at midnight UTC (5 AM PKT)
+  workflow_dispatch:
+    inputs:
+      EnvName:
+        description: 'Environment Name'
+        required: false
+        default: 'QA'
+      SUITE_NAME:
+        description: 'Test Suite (e.g., test:all, smoke, regression)'
+        required: false
+        default: 'test:all'
+      ZOOM_IN_PERCENTAGE:
+        description: 'Zoom In %'
+        required: false
+        default: '100%'
+      SCREEN_WIDTH:
+        description: 'Screen Width'
+        required: false
+        default: '1500'
+      SCREEN_HEIGHT:
+        description: 'Screen Height'
+        required: false
+        default: '720'
+
+jobs:
+  run-tests:
+    runs-on: self-hosted
+    timeout-minutes: 120
+
+    env:
+      CI: true
+      EnvName: ${{ github.event.inputs.EnvName || 'QA' }}
+      SUITE_NAME: ${{ github.event.inputs.SUITE_NAME || 'test:all' }}
+      ZOOM_IN_PERCENTAGE: ${{ github.event.inputs.ZOOM_IN_PERCENTAGE || '100%' }}
+      SCREEN_WIDTH: ${{ github.event.inputs.SCREEN_WIDTH || '1500' }}
+      SCREEN_HEIGHT: ${{ github.event.inputs.SCREEN_HEIGHT || '720' }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18.16'
+
+      - name: Install NPM Packages
+        run: npm ci
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright Tests
+        run: |
+          echo "Running test suite: $SUITE_NAME"
+          npm run $SUITE_NAME
+
+      - name: Save Playwright HTML Report to D:\
+        if: always()
+        run: |
+          mkdir -p "D:/Automation Reports/SPECTR/PWExecutions"
+          cp -r playwright-report/* "D:/Automation Reports/SPECTR/PWExecutions"
+
+      - name: Save Screenshots to D:\
+        if: always()
+        run: |
+          mkdir -p "D:/Automation Reports/SPECTR/Screenshots"
+          cp -r Screenshots/* "D:/Automation Reports/SPECTR/Screenshots"
+
+      - name: Upload Playwright Report as Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+
+      - name: Upload Screenshots as Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: Screenshots/
+
+      - name: Upload Test Results (JUnit)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: results.xml
+
+      - name: Run TearDown Script
+        if: always()
+        run: node TearDown.js
