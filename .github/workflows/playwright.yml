@@ -4,8 +4,8 @@ on:
   push:
     branches:
       - develop
-  schedule:
-    - cron: '0 0 * * 1,4'  # Monday & Thursday at midnight UTC (5 AM PKT)
+ # schedule:
+    #- cron: '0 0 * * 1,4'  # Monday & Thursday at midnight UTC (5 AM PKT)
   workflow_dispatch:
     inputs:
       EnvName:
